@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# mycron
 
-## Getting Started
+A small cron-job scheduler for the web, inspired by cron-job.org. Add a URL and a schedule, and mycron calls it on time, records how it went, and shows you charts.
 
-First, run the development server:
+Built with Next.js, Supabase and Vercel. It is meant for one person and their friends, not for the public internet.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## What it does
+
+- Call any public URL on a cron schedule (GET, POST and more, with custom headers)
+- Sign in with Google or GitHub
+- Per-job history of the last 50 runs, with status, response time and start delay
+- Charts with hover details: runs per hour, response time and start delay
+- A Statistics tab with totals for the whole app
+- An Admin tab for the owner: see who is online and change roles
+- Limits: 10 jobs per person, no limit for admins
+- Light and dark theme
+
+## How it works
+
+1. **Supabase `pg_cron`** pings `/api/tick` every minute with a secret.
+2. **`/api/tick`** finds the jobs that are due and runs them.
+3. Each run is saved, older runs are trimmed to 50 per job, and hourly totals are kept for the charts.
+4. Calls to private or internal addresses (localhost, `10.x`, `192.168.x`, and similar) are blocked.
+
+## Run it yourself
+
+You need a free [Supabase](https://supabase.com) project, a [Vercel](https://vercel.com) account and Node.js 20 or newer.
+
+1. Clone this repo and run `npm install`.
+2. In the Supabase SQL Editor, run these files in order:
+   - `supabase/schema.sql`
+   - `supabase/multiuser.sql`
+   - `supabase/schedule.sql` (put your own secret where it says `YOUR_CRON_SECRET`)
+3. In Supabase, turn on the Google and GitHub providers under Authentication, and turn the Email provider off.
+4. Create a `.env.local` file with these values:
+
+```
+   SUPABASE_URL=
+   SUPABASE_SERVICE_ROLE_KEY=
+   NEXT_PUBLIC_SUPABASE_URL=
+   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
+   CRON_SECRET=
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+5. Run `npm run dev` and open http://localhost:3000.
+6. Deploy with `npx vercel --prod` and add the same values as environment variables in Vercel.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The first person to sign in becomes the admin.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Security notes
 
-## Learn More
+- Never commit `.env.local` or any key.
+- The service key is only used on the server.
+- Row level security is on for every table, and all data goes through the server.
 
-To learn more about Next.js, take a look at the following resources:
+## License
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Personal project. Use it as a reference.
